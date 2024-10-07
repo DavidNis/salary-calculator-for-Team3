@@ -4,7 +4,7 @@ import tkinter.font as tkFont
 import pandas as pd
 from datetime import datetime
 from ttkthemes import ThemedTk
-from salary_calc import SalaryCalculator  # Importing from salary_calc.py
+from salary_calc import SalaryCalculator
 import threading
 
 
@@ -141,6 +141,12 @@ class SalaryGui:
         # Button to calculate the total pay
         total_pay_button = ttk.Button(action_frame, text="Calculate Total Pay", command=self.calculate_total_pay, style="Custom.TButton")
         total_pay_button.grid(row=0, column=1, padx=20, pady=10)
+
+        # Label to display the total pay
+        ttk.Label(action_frame, text="Total Pay:", style="Custom.TLabel").grid(row=1, column=0, padx=10, pady=10, sticky="e")
+        self.total_pay_var = tk.StringVar(value="0.00")
+        self.total_pay_label = ttk.Label(action_frame, textvariable=self.total_pay_var, style="Custom.TLabel")
+        self.total_pay_label.grid(row=1, column=1, padx=10, pady=10, sticky="w")
 
     
     
