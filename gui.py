@@ -128,25 +128,26 @@ class SalaryGui:
         ttk.Checkbutton(edit_frame, text="Last Day of Holiday", variable=self.last_day_holiday_var, style="Custom.TCheckbutton").grid(row=4, column=2, columnspan=2, padx=15, pady=10)
 
         # Button to update selected row
-        ttk.Button(edit_frame, text="Update Selected Row", command=self.update_row, style="Custom.TButton").grid(row=5, column=0, columnspan=2, pady=20)
+        update_button = ttk.Button(edit_frame, text="Update Selected Row", command=self.update_row, style="Custom.TButton")
+        update_button.grid(row=5, column=0, columnspan=1, padx=10, pady=20, sticky="w")
 
         # Frame for action buttons
         action_frame = ttk.Frame(self.root)
         action_frame.pack(pady=25)
 
         # Button to calculate the pay for each day
-        calculate_pay_button = ttk.Button(action_frame, text="Calculate Pay for Each Day", command=self.calculate_pay, style="Custom.TButton")
-        calculate_pay_button.grid(row=0, column=0, padx=20, pady=10)
+        calculate_pay_button = ttk.Button(edit_frame, text="Calculate Pay for Each Day", command=self.calculate_pay, style="Custom.TButton")
+        calculate_pay_button.grid(row=5, column=1, padx=10, pady=20, sticky="w")
 
         # Button to calculate the total pay
-        total_pay_button = ttk.Button(action_frame, text="Calculate Total Pay", command=self.calculate_total_pay, style="Custom.TButton")
-        total_pay_button.grid(row=0, column=1, padx=20, pady=10)
+        total_pay_button = ttk.Button(edit_frame, text="Calculate Total Pay", command=self.calculate_total_pay, style="Custom.TButton")
+        total_pay_button.grid(row=5, column=2, padx=10, pady=20, sticky="w")
 
         # Label to display the total pay
-        ttk.Label(action_frame, text="Total Pay:", style="Custom.TLabel").grid(row=1, column=0, padx=10, pady=10, sticky="e")
+        ttk.Label(edit_frame, text="Total Pay:", style="Custom.TLabel").grid(row=5, column=3, padx=10, pady=20, sticky="e")
         self.total_pay_var = tk.StringVar(value="0.00")
-        self.total_pay_label = ttk.Label(action_frame, textvariable=self.total_pay_var, style="Custom.TLabel")
-        self.total_pay_label.grid(row=1, column=1, padx=10, pady=10, sticky="w")
+        self.total_pay_label = ttk.Label(edit_frame, textvariable=self.total_pay_var, style="Custom.TLabel")
+        self.total_pay_label.grid(row=5, column=4, padx=10, pady=20, sticky="w")
 
     
     
