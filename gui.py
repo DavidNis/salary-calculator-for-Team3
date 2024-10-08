@@ -11,7 +11,7 @@ import threading
 class SalaryGui:
     def __init__(self, root):
         self.root = root
-        self.root.title('Salary Calculator with Excel Import')
+        self.root.title('Salary Calculator for team 3')
         self.root.geometry("1200x900")
         self.root.set_theme("arc")
 
@@ -294,6 +294,7 @@ class SalaryGui:
 
         # extract values from each column correctly
         self.date_var.set(values[0])
+        self.date_of_week_var.set(values[1])
         self.role_var.set(values[2])
         self.entry_time_var.set(values[3]) 
         self.exit_time_var.set(values[4])  
@@ -395,7 +396,7 @@ class SalaryGui:
         """
         Calculate the total pay for all days in the treeview.
         """
-        total_pay = 0.0  # To store the sum of all valid pays
+        total_pay = 0.0  
 
         try:
             for item in self.tree.get_children():
@@ -411,7 +412,7 @@ class SalaryGui:
                         continue
 
             # Show the total pay in a message box
-            messagebox.showinfo("Total Pay", f"Total Pay for all entries: {total_pay:.2f} shekels.")
+            self.total_pay_var.set(f"{total_pay:.2f} shekels")
         except Exception as e:
             messagebox.showerror("Error", f"Error calculating total pay: {e}")
 
