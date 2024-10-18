@@ -52,8 +52,8 @@ class SalaryGui:
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
         scrollbar.pack(side=tk.RIGHT, fill='y')
 
-        canvas.configure(yscrollcommand=scrollbar.set)
-        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+        canvas.configure(yscrollcommand=scrollbar.set) # Link the scrollbar to the canvas
+        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all"))) # Update scroll region
 
         # Frame for all widgets inside the canvas
         frame_inside_canvas = ttk.Frame(canvas)
