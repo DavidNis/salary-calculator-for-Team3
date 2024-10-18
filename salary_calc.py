@@ -85,7 +85,7 @@ class SalaryCalculator:
         """
         Calculate the travel charge based on the day and time.
         """
-        travel_charge = 12  # Default travel charge
+        travel_charge = 12  
         
         # friday charge 
         if is_friday:
