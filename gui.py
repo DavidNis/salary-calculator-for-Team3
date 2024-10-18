@@ -52,8 +52,8 @@ class SalaryGui:
         scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
         scrollbar.pack(side=tk.RIGHT, fill='y')
 
-        canvas.configure(yscrollcommand=scrollbar.set) # Link the scrollbar to the canvas
-        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all"))) # Update scroll region
+        canvas.configure(yscrollcommand=scrollbar.set)  # Link the scrollbar to the canvas
+        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all")))  # Update scroll region
 
         # Frame for all widgets inside the canvas
         frame_inside_canvas = ttk.Frame(canvas)
@@ -73,7 +73,7 @@ class SalaryGui:
         tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Treeview to display data
-        self.tree = ttk.Treeview(tree_frame, columns=("Date", "Day of Week", "Role", "Entry Time", "Exit Time", "Control Room", "Pay"),
+        self.tree = ttk.Treeview(tree_frame, columns=("Date", "Day of Week", "Role", "Entry Time", "Exit Time", "Control Room", "Pay", "Travel Charge"),
                                 show='headings', selectmode='browse', yscrollcommand=tree_scroll.set)
         self.tree.heading("Date", text="Date", anchor='center')
         self.tree.heading("Day of Week", text="Day of Week", anchor='center')
@@ -82,6 +82,7 @@ class SalaryGui:
         self.tree.heading("Exit Time", text="Exit Time", anchor='center')
         self.tree.heading("Control Room", text="Control Room", anchor='center')
         self.tree.heading("Pay", text="Pay", anchor='center')
+        self.tree.heading("Travel Charge", text="Travel Charge", anchor='center')
 
         self.tree.column("Date", anchor='center', width=100)
         self.tree.column("Day of Week", anchor='center', width=120)
@@ -90,9 +91,13 @@ class SalaryGui:
         self.tree.column("Exit Time", anchor='center', width=100)
         self.tree.column("Control Room", anchor='center', width=100)
         self.tree.column("Pay", anchor='center', width=100)
+        self.tree.column("Travel Charge", anchor='center', width=120)
 
         self.tree.pack(fill='both', expand=True, padx=15)
         tree_scroll.config(command=self.tree.yview)
+
+        # Bind the TreeviewSelect event to the on_row_select method
+        self.tree.bind('<<TreeviewSelect>>', self.on_row_select)
 
         # Frame for editing selected row
         edit_frame = ttk.LabelFrame(frame_inside_canvas, text="Edit Selected Row", style="Custom.TLabelframe")
@@ -130,8 +135,8 @@ class SalaryGui:
 
         # Checkbutton for control room
         self.control_room_var = tk.BooleanVar()
-        ttk.Checkbutton(edit_frame, text="In Control Room", variable=self.control_room_var, 
-                        command=self.update_control_room, style="Custom.TCheckbutton").grid(row=4, column=0, columnspan=2, padx=15, pady=10, sticky="ew")
+        self.control_room_checkbox = ttk.Checkbutton(edit_frame, text="In Control Room", variable=self.control_room_var, command=self.update_control_room, style="Custom.TCheckbutton")
+        self.control_room_checkbox.grid(row=4, column=0, columnspan=2, padx=15, pady=10, sticky="ew")
 
         # Checkbutton for holiday
         self.holiday_var = tk.BooleanVar()
@@ -144,10 +149,6 @@ class SalaryGui:
         # Button to update selected row
         update_button = ttk.Button(edit_frame, text="Update Selected Row", command=self.update_row, style="Custom.TButton")
         update_button.grid(row=5, column=0, columnspan=1, padx=10, pady=20, sticky="w")
-
-        # Frame for action buttons
-        action_frame = ttk.Frame(self.root)
-        action_frame.pack(pady=25)
 
         # Button to calculate the pay for each day
         calculate_pay_button = ttk.Button(edit_frame, text="Calculate Pay for Each Day", command=self.calculate_pay, style="Custom.TButton")
@@ -168,32 +169,43 @@ class SalaryGui:
     
     def update_control_room(self):
         """
-        Update the "Control Room" value in the selected row based on the checkbox state.
+        Update the 'In Control Room' value in the selected row based on the checkbox state
+        and persist the change in both the Treeview and the underlying data structure.
         """
-        selected_item = self.tree.selection()
+        selected_item = self.tree.selection()  # Get the selected item in the Treeview
         if not selected_item:
             messagebox.showerror("No Selection", "Please select a row to update.")
             return
 
-        # Get the value of the checkbox and set "Yes" or "No"
+        # Get the value of the checkbox and set it as "Yes" or "No"
         in_control_room = "Yes" if self.control_room_var.get() else "No"
 
-        # Get existing values from the selected item
+        # Get existing values from the selected item in the Treeview
         values = self.tree.item(selected_item, 'values')
 
-        # Create a new tuple with the updated "Control Room" value
+        # Ensure there are 8 values (in case Travel Charge or Pay columns are missing)
+        if len(values) < 8:
+            values = list(values) + [''] * (8 - len(values))
+
+        # Create a new tuple with the updated "In Control Room" value
         updated_values = (
             values[0],  # Date
             values[1],  # Day of Week
             values[2],  # Role
             values[3],  # Entry Time
             values[4],  # Exit Time
-            in_control_room,  # Updated Control Room value
-            values[6]  # Pay
+            in_control_room,  # Updated Control Room value (Yes/No based on checkbox)
+            values[6],  # Pay
+            values[7]   # Travel Charge
         )
 
         # Update the Treeview with the new values
         self.tree.item(selected_item, values=updated_values)
+
+        # Persist the change in the underlying data structure (e.g., self.daily_records)
+        row_index = self.tree.index(selected_item)  # Get the index of the selected row
+        if row_index < len(self.daily_records):
+            self.daily_records[row_index]['control_room'] = in_control_room
 
 
 
@@ -298,22 +310,27 @@ class SalaryGui:
 
     def on_row_select(self, event):
         """
-        Handle the event when a row is selected in the Tree.
+        Handle the event when a row is selected in the Treeview.
+        Populate the selected row's data into the input fields.
         """
         selected_item = self.tree.selection()
         if not selected_item:
             return
 
-        values = self.tree.item(selected_item, 'values')
+        values = self.tree.item(selected_item, 'values')  # Get the values from the selected row
 
-        # extract values from each column correctly
-        self.date_var.set(values[0])
-        self.date_of_week_var.set(values[1])
-        self.role_var.set(values[2])
-        self.entry_time_var.set(values[3]) 
-        self.exit_time_var.set(values[4])  
+        # Ensure there are 8 values (in case Travel Charge or Pay columns are missing)
+        if len(values) < 8:
+            values = list(values) + [''] * (8 - len(values))
 
-        # update the "In Control Room" checkbox
+        # Populate the fields with the respective values from the selected row
+        self.date_var.set(values[0])  # Date
+        self.date_of_week_var.set(values[1])  # Day of Week
+        self.role_var.set(values[2])  # Role
+        self.entry_time_var.set(values[3])  # Entry Time
+        self.exit_time_var.set(values[4])  # Exit Time
+
+        # Update the "In Control Room" checkbox based on the selected row's data
         self.control_room_var.set(True if values[5] == "Yes" else False)
 
 
@@ -337,7 +354,7 @@ class SalaryGui:
 
         # Update Treeview with new values
         day_of_week = self.get_day_of_week(date_str)  # Get the day of the week for the updated date
-        self.tree.item(selected_item, values=(date_str, day_of_week, role, entry_time, exit_time, in_control_room, ""))
+        self.tree.item(selected_item, values=(date_str, day_of_week, role, entry_time, exit_time, in_control_room,"0.00", "0.00"))
 
     # Helper function to get day of the week
     def get_day_of_week(self, date_str):
@@ -354,7 +371,7 @@ class SalaryGui:
 
     def calculate_pay(self):
         """
-        Calculate the pay for each row in the treeview and update the 'Pay' column.
+        Calculate the pay for each row in the treeview and update the 'Pay' and 'Travel Charge' columns.
         """
         if self.df is None:
             messagebox.showerror("No Data", "Please load an Excel file first.")
@@ -363,11 +380,17 @@ class SalaryGui:
         try:
             for item in self.tree.get_children():
                 values = self.tree.item(item, 'values')
-                # The values tuple has 7 elements now: Date, DayOfWeek, Role, Entry Time, Exit Time, Control Room, Pay
-                date_str, day_of_week, role, entry_time_str, exit_time_str, in_control_room, _ = values
+
+                # Ensure the row has 8 values, fill with placeholder if needed
+                if len(values) < 8:
+                    values = list(values) + [''] * (8 - len(values))  # Add empty placeholders for missing columns
+
+                # The values tuple now has 8 elements: Date, DayOfWeek, Role, Entry Time, Exit Time, Control Room, Pay, Travel Charge
+                date_str, day_of_week, role, entry_time_str, exit_time_str, in_control_room, _, _ = values
 
                 if entry_time_str == "Missing" or exit_time_str == "Missing":
                     total_pay_day = 0.0
+                    travel_charge_day = 0.0
                 else:
                     # Parse the date, start time, and end time
                     date = datetime.strptime(date_str, "%Y-%m-%d").date()
@@ -395,8 +418,11 @@ class SalaryGui:
                     )
                     total_pay_day = temp_calculator.total_pay()
 
-                # Update Treeview with the calculated pay for that specific day
-                self.tree.item(item, values=(date_str, day_of_week, role, entry_time_str, exit_time_str, in_control_room, f"{total_pay_day:.2f}"))
+                    # Calculate the travel charge using the same logic as in SalaryCalculator
+                    travel_charge_day = temp_calculator.calculate_travel_charge(date, start_time, end_time, is_friday, is_saturday)
+
+                # Update Treeview with the calculated pay and travel charge for that specific day
+                self.tree.item(item, values=(date_str, day_of_week, role, entry_time_str, exit_time_str, in_control_room, f"{total_pay_day:.2f}", f"{travel_charge_day:.2f}"))
 
         except Exception as e:
             messagebox.showerror("Error", f"Error calculating pay: {e}")

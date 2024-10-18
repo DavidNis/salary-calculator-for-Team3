@@ -79,3 +79,26 @@ class SalaryCalculator:
             end_time_str = record['end_time'].strftime("%H:%M")
             pay = record['pay']
             print(f"Date: {date_str}, Start Time: {start_time_str}, End Time: {end_time_str}, Pay: {pay:.2f} shekels")
+
+
+    def calculate_travel_charge(self, date, start_time, end_time, is_friday, is_saturday):
+        """
+        Calculate the travel charge based on the day and time.
+        """
+        travel_charge = 12  # Default travel charge
+        
+        # friday charge 
+        if is_friday:
+            if start_time < datetime.strptime("15:00", "%H:%M").time():
+                travel_charge = 12  # 6 shekels each way
+            else:
+                travel_charge = 40  # 40 shekels after 3:00 p.m for both way, 20 each.
+        
+        # saturday charge
+        elif is_saturday:
+            if start_time >= datetime.strptime("23:00", "%H:%M").time() and end_time <= datetime.strptime("07:00", "%H:%M").time():
+                travel_charge = 20 + 6  # 20 shekels to work, 6 shekels return.
+            else:
+                travel_charge = 12  # 12 shekels total.
+        
+        return travel_charge
