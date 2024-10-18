@@ -12,10 +12,16 @@ class SalaryGui:
     def __init__(self, root):
         self.root = root
         self.root.title('Salary Calculator for team 3')
-        self.root.geometry("1200x900")
-        self.root.set_theme("arc")
+        #self.root.geometry("1200x900")
+        screen_width = self.root.winfo_screenwidth()
+        screen_height = self.root.winfo_screenheight()
+        window_width = min(int(screen_width * 0.7), screen_width)
+        window_height = min(int(screen_height * 0.7), screen_height)
+        self.root.geometry(f"{window_width}x{window_height}")
+        self.root.minsize(800, 600)
 
-        self.df = None
+        self.root.set_theme("arc")
+        self.df = None # DataFrame to store the loaded Excel data
         self.salary_calculator = SalaryCalculator()
 
         # Define a custom font for widgets with increased size and bold weight
@@ -36,22 +42,39 @@ class SalaryGui:
 
 
     def create_widgets(self):
+        # Create a canvas to allow for scrolling if the window is too small
+        main_frame = ttk.Frame(self.root)
+        main_frame.pack(fill='both', expand=True)
+
+        canvas = tk.Canvas(main_frame)
+        canvas.pack(side=tk.LEFT, fill='both', expand=True)
+
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scrollbar.pack(side=tk.RIGHT, fill='y')
+
+        canvas.configure(yscrollcommand=scrollbar.set)
+        canvas.bind('<Configure>', lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+        # Frame for all widgets inside the canvas
+        frame_inside_canvas = ttk.Frame(canvas)
+        canvas.create_window((0, 0), window=frame_inside_canvas, anchor="nw")
+
         # Frame for loading the Excel file
-        load_frame = ttk.Frame(self.root)
-        load_frame.pack(pady=15)
+        load_frame = ttk.Frame(frame_inside_canvas)
+        load_frame.grid(row=0, column=0, pady=15, sticky="ew")
         ttk.Button(load_frame, text="Load Excel File", command=self.load_excel_file, style="Custom.TButton").pack()
 
         # Frame for Treeview (with a scrollbar)
-        tree_frame = ttk.Frame(self.root)
-        tree_frame.pack(pady=15, fill='x')
+        tree_frame = ttk.Frame(frame_inside_canvas)
+        tree_frame.grid(row=1, column=0, pady=15, sticky="ew")
 
         # Scrollbar for the Treeview
         tree_scroll = ttk.Scrollbar(tree_frame)
         tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Treeview to display data
-        self.tree = ttk.Treeview(tree_frame, columns=("Date","Day of Week", "Role", "Entry Time", "Exit Time", "Control Room", "Pay"),
-                                 show='headings', selectmode='browse', yscrollcommand=tree_scroll.set)
+        self.tree = ttk.Treeview(tree_frame, columns=("Date", "Day of Week", "Role", "Entry Time", "Exit Time", "Control Room", "Pay"),
+                                show='headings', selectmode='browse', yscrollcommand=tree_scroll.set)
         self.tree.heading("Date", text="Date", anchor='center')
         self.tree.heading("Day of Week", text="Day of Week", anchor='center')
         self.tree.heading("Role", text="Role", anchor='center')
@@ -68,56 +91,47 @@ class SalaryGui:
         self.tree.column("Control Room", anchor='center', width=100)
         self.tree.column("Pay", anchor='center', width=100)
 
-        self.tree.pack(fill='x', padx=15)
+        self.tree.pack(fill='both', expand=True, padx=15)
         tree_scroll.config(command=self.tree.yview)
 
-        # Event to handle row selection
-        self.tree.bind('<<TreeviewSelect>>', self.on_row_select)
-
         # Frame for editing selected row
-        edit_frame = ttk.LabelFrame(self.root, text="Edit Selected Row", style="Custom.TLabelframe")
-        edit_frame.pack(pady=20, padx=20, fill='x', expand='yes')
-
+        edit_frame = ttk.LabelFrame(frame_inside_canvas, text="Edit Selected Row", style="Custom.TLabelframe")
+        edit_frame.grid(row=2, column=0, pady=20, padx=20, sticky="ew")
 
         # Entry for date
         ttk.Label(edit_frame, text="Date:", style="Custom.TLabel").grid(row=0, column=0, sticky="w", padx=15, pady=10)
         self.date_var = tk.StringVar()
         self.date_entry = ttk.Entry(edit_frame, textvariable=self.date_var, state='readonly', width=25, font=self.custom_font)
-        self.date_entry.grid(row=0, column=1, padx=15, pady=10)
-
+        self.date_entry.grid(row=0, column=1, padx=15, pady=10, sticky="ew")
 
         # Entry for day of the week
         ttk.Label(edit_frame, text="Day of the Week:", style="Custom.TLabel").grid(row=0, column=2, sticky="w", padx=15, pady=10)
         self.date_of_week_var = tk.StringVar()
         self.date_of_week_entry = ttk.Entry(edit_frame, textvariable=self.date_of_week_var, width=25, font=self.custom_font)
-        self.date_of_week_entry.grid(row=0, column=3, padx=15, pady=10)
-
+        self.date_of_week_entry.grid(row=0, column=3, padx=15, pady=10, sticky="ew")
 
         # Entry for role
         ttk.Label(edit_frame, text="Role:", style="Custom.TLabel").grid(row=1, column=0, sticky="w", padx=15, pady=10)
         self.role_var = tk.StringVar()
         self.role_entry = ttk.Entry(edit_frame, textvariable=self.role_var, width=25, font=self.custom_font)
-        self.role_entry.grid(row=1, column=1, padx=15, pady=10)
-
+        self.role_entry.grid(row=1, column=1, padx=15, pady=10, sticky="ew")
 
         # Entry for start time
         ttk.Label(edit_frame, text="Entry Time (HH:MM):", style="Custom.TLabel").grid(row=2, column=0, sticky="w", padx=15, pady=10)
         self.entry_time_var = tk.StringVar()
         self.entry_time_entry = ttk.Entry(edit_frame, textvariable=self.entry_time_var, width=25, font=self.custom_font)
-        self.entry_time_entry.grid(row=2, column=1, padx=15, pady=10)
+        self.entry_time_entry.grid(row=2, column=1, padx=15, pady=10, sticky="ew")
 
         # Entry for exit time
         ttk.Label(edit_frame, text="Exit Time (HH:MM):", style="Custom.TLabel").grid(row=3, column=0, sticky="w", padx=15, pady=10)
         self.exit_time_var = tk.StringVar()
         self.exit_time_entry = ttk.Entry(edit_frame, textvariable=self.exit_time_var, width=25, font=self.custom_font)
-        self.exit_time_entry.grid(row=3, column=1, padx=15, pady=10)
-
-
+        self.exit_time_entry.grid(row=3, column=1, padx=15, pady=10, sticky="ew")
 
         # Checkbutton for control room
         self.control_room_var = tk.BooleanVar()
         ttk.Checkbutton(edit_frame, text="In Control Room", variable=self.control_room_var, 
-                command=self.update_control_room, style="Custom.TCheckbutton").grid(row=4, column=0, columnspan=2, padx=15, pady=10)
+                        command=self.update_control_room, style="Custom.TCheckbutton").grid(row=4, column=0, columnspan=2, padx=15, pady=10, sticky="ew")
 
         # Checkbutton for holiday
         self.holiday_var = tk.BooleanVar()
