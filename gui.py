@@ -12,7 +12,7 @@ class SalaryGui:
     def __init__(self, root):
         self.root = root
         self.root.title('Salary Calculator for team 3')
-        self.root.iconbitmap(r'C:\Users\nidavidc\Downloads\celery.ico')
+        self.root.iconbitmap("Celery.ico")
         #self.root.geometry("1200x900")
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
