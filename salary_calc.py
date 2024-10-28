@@ -56,7 +56,7 @@ class SalaryCalculator:
 
         weekday = current_time.weekday()  # Get the day of the week (0 = Monday, 1 = Tuesday, 2 = Wednesday, 3 = Thursday, 4 = Friday, 5 = Saturday, 6 = Sunday)
         
-        if weekday == 4: #TODO: CHECK IF THE ENTRY SHABAT TIME IS CONSTANT OR NOT.
+        if weekday == 4 and current_time.hour >= 16:
             multiplier = 1.5
         elif weekday == 5:  
             multiplier = 1.5

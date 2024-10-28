@@ -10,6 +10,9 @@ import threading
 
 class SalaryGui:
     def __init__(self, root):
+        """
+        constructor for the SalaryGui class
+        """
         self.root = root
         self.root.title('Salary Calculator for team 3')
         self.root.iconbitmap("Celery.ico")
@@ -43,6 +46,9 @@ class SalaryGui:
 
 
     def create_widgets(self):
+        """
+        Create the widgets for the GUI.
+        """
         # Create a canvas to allow for scrolling if the window is too small
         main_frame = ttk.Frame(self.root)
         main_frame.pack(fill='both', expand=True)
@@ -159,6 +165,10 @@ class SalaryGui:
         total_pay_button = ttk.Button(edit_frame, text="Calculate Total Pay", command=self.calculate_total_pay, style="Custom.TButton")
         total_pay_button.grid(row=5, column=2, padx=10, pady=20, sticky="w")
 
+        # Button to select all 'In Control Room' checkboxes
+        select_all_button = ttk.Button(edit_frame, text="Select All CR", command=self.select_all_in_control_room, style="Custom.TButton")
+        select_all_button.grid(row=5, column=3, padx=10, pady=20, sticky="w")
+
         # Label to display the total pay
         ttk.Label(edit_frame, text="Total Pay:", style="Custom.TLabel").grid(row=5, column=3, padx=10, pady=20, sticky="e")
         self.total_pay_var = tk.StringVar(value="0.00")
@@ -167,6 +177,7 @@ class SalaryGui:
 
     
     
+
     
     def update_control_room(self):
         """
@@ -207,6 +218,35 @@ class SalaryGui:
         row_index = self.tree.index(selected_item)  # Get the index of the selected row
         if row_index < len(self.daily_records):
             self.daily_records[row_index]['control_room'] = in_control_room
+        
+
+
+
+
+    def select_all_in_control_room(self):
+        """
+        Set the 'In Control Room' checkbox to 'Yes' for all rows in the Treeview.
+        """
+        for item in self.tree.get_children():
+            values = self.tree.item(item, 'values')
+
+            if len(values) < 8:
+                values = list(values) + [''] * (8 - len(values))
+
+            # update control room value to "Yes"
+            updated_values = (
+                values[0],  # Date
+                values[1],  # Day of Week
+                values[2],  # Role
+                values[3],  # Entry Time
+                values[4],  # Exit Time
+                "Yes",      # Set 'In Control Room' to "Yes"
+                values[6],  # Pay
+                values[7]   # Travel Charge
+            )
+
+            self.tree.item(item, values=updated_values)
+
 
 
 
@@ -236,6 +276,9 @@ class SalaryGui:
 
 
     def _load_file_thread(self, file_path):
+        """
+        Load the Excel file in a separate thread to keep the GUI responsive.
+        """
         try:
             # Load the file and rename columns
             self.df = pd.read_excel(file_path, skiprows=4, header=0, engine='openpyxl')
