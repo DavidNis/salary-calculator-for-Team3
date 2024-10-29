@@ -6,6 +6,7 @@ from datetime import datetime
 from ttkthemes import ThemedTk
 from salary_calc import SalaryCalculator
 import threading
+import os, sys
 
 
 class SalaryGui:
@@ -15,7 +16,19 @@ class SalaryGui:
         """
         self.root = root
         self.root.title('Salary Calculator for team 3')
-        self.root.iconbitmap("Celery.ico")
+        #self.root.iconbitmap("Celery.ico")
+        
+        if hasattr(sys, '_MEIPASS'):
+            # If using PyInstaller, icon should be in _MEIPASS directory
+            icon_path = os.path.join(sys._MEIPASS, "Celery.ico")
+        else:
+            # For running locally, the icon should be in the same directory
+            icon_path = "Celery.ico"
+
+        try:
+            self.root.iconbitmap(icon_path)
+        except Exception as e:
+            print(f"Icon not found: {e}")
         #self.root.geometry("1200x900")
         screen_width = self.root.winfo_screenwidth()
         screen_height = self.root.winfo_screenheight()
