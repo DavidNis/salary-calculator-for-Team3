@@ -4,7 +4,10 @@ class SalaryCalculator:
     def __init__(self):
         self.daily_records = []
 
-    def add_work_day(self, date, start_time, end_time, in_control_room,
+
+
+
+    def add_work_day(self, date, start_time, end_time, in_control_room, is_holiday_eve,
                      is_friday, is_saturday, is_holiday, is_last_day_of_holiday):
         base_rate = 60 if in_control_room else 50
 
@@ -30,7 +33,7 @@ class SalaryCalculator:
                 next_hour = end_datetime  # for partial hours
 
             hour_duration = (next_hour - current_time).total_seconds() / 3600
-            multiplier = self._get_correct_multiplier(current_time)
+            multiplier = self._get_correct_multiplier(current_time, is_holiday, is_holiday_eve, is_last_day_of_holiday)
             total_pay += base_rate * multiplier * hour_duration
 
             current_time = next_hour  # Move the loop forward
@@ -43,7 +46,10 @@ class SalaryCalculator:
             'pay': total_pay
         })
 
-    def _get_correct_multiplier(self, current_time):
+
+
+
+    def _get_correct_multiplier(self, current_time, is_holiday=False, is_holiday_eve=False, is_last_day_of_holiday=False):
         """
         Determine the pay multiplier based on the day and time.
         - If it's Friday, the multiplier is 1.5x for the entire day.
@@ -51,22 +57,35 @@ class SalaryCalculator:
         - If it's Sunday before 4 AM, the multiplier is 1.5x.
         - For other days and times, the multiplier is 1.0x.
         """
+        if is_holiday:
+            return 1.5
         
         multiplier = 1.0
 
         weekday = current_time.weekday()  # Get the day of the week (0 = Monday, 1 = Tuesday, 2 = Wednesday, 3 = Thursday, 4 = Friday, 5 = Saturday, 6 = Sunday)
         
-        if weekday == 4 and current_time.hour >= 16:
+        if (weekday == 4 or is_holiday_eve) and current_time.hour >= 16:
             multiplier = 1.5
         elif weekday == 5:  
+            multiplier = 1.5
+        elif is_last_day_of_holiday and current_time.hour < 4:
             multiplier = 1.5
         elif weekday == 6 and current_time.hour < 4:  # Sunday before 4am
             multiplier = 1.5
 
         return multiplier
 
+
+
+
+
     def total_pay(self):
         return sum(record['pay'] for record in self.daily_records)
+
+
+
+
+
 
     def show_all_days(self):
         if not self.daily_records:
@@ -79,6 +98,10 @@ class SalaryCalculator:
             end_time_str = record['end_time'].strftime("%H:%M")
             pay = record['pay']
             print(f"Date: {date_str}, Start Time: {start_time_str}, End Time: {end_time_str}, Pay: {pay:.2f} shekels")
+
+
+
+
 
 
     def calculate_travel_charge(self, date, start_time, end_time, is_friday, is_saturday):

@@ -41,6 +41,10 @@ class SalaryGui:
         self.df = None # DataFrame to store the loaded Excel data
         self.salary_calculator = SalaryCalculator()
 
+        self.holiday_eve_stat = {}
+        self.holiday_stat = {}
+        self.last_day_holiday_stat = {}
+
         # Define a custom font for widgets with increased size and bold weight
         self.custom_font = tkFont.Font(family="Rubik", size=14)
 
@@ -116,7 +120,7 @@ class SalaryGui:
         self.tree.pack(fill='both', expand=True, padx=15)
         tree_scroll.config(command=self.tree.yview)
 
-        # Bind the TreeviewSelect event to the on_row_select method
+        # Bind the TreeviewSelect event to the on_row_select method, thats why we need event parameter in on_row_select method
         self.tree.bind('<<TreeviewSelect>>', self.on_row_select)
 
         # Frame for editing selected row
@@ -158,14 +162,21 @@ class SalaryGui:
         self.control_room_checkbox = ttk.Checkbutton(edit_frame, text="In Control Room", variable=self.control_room_var, command=self.update_control_room, style="Custom.TCheckbutton")
         self.control_room_checkbox.grid(row=4, column=0, columnspan=2, padx=15, pady=10, sticky="ew")
 
+        # Checkbutton for holiday eve
+        self.holiday_eve_var = tk.BooleanVar()
+        ttk.Checkbutton(edit_frame, text="Holiday Eve", variable=self.holiday_eve_var, 
+                style="Custom.TCheckbutton", command=self.save_holiday_status).grid(row=4, column=0, columnspan=2, padx=15, pady=10)
+
         # Checkbutton for holiday
         self.holiday_var = tk.BooleanVar()
-        ttk.Checkbutton(edit_frame, text="Holiday", variable=self.holiday_var, style="Custom.TCheckbutton").grid(row=4, column=1, columnspan=2, padx=15, pady=10)
+        ttk.Checkbutton(edit_frame, text="Holiday", variable=self.holiday_var, 
+                style="Custom.TCheckbutton", command=self.save_holiday_status).grid(row=4, column=1, columnspan=2, padx=15, pady=10)
 
         # Checkbutton for last day of holiday
         self.last_day_holiday_var = tk.BooleanVar()
-        ttk.Checkbutton(edit_frame, text="Last Day of Holiday", variable=self.last_day_holiday_var, style="Custom.TCheckbutton").grid(row=4, column=2, columnspan=2, padx=15, pady=10)
-
+        ttk.Checkbutton(edit_frame, text="Last Day of Holiday", variable=self.last_day_holiday_var, 
+                style="Custom.TCheckbutton", command=self.save_holiday_status).grid(row=4, column=2, columnspan=2, padx=15, pady=10)
+        
         # Button to update selected row
         update_button = ttk.Button(edit_frame, text="Update Selected Row", command=self.update_row, style="Custom.TButton")
         update_button.grid(row=5, column=0, columnspan=1, padx=10, pady=20, sticky="w")
@@ -233,6 +244,25 @@ class SalaryGui:
             self.daily_records[row_index]['control_room'] = in_control_room
         
 
+
+
+
+    def save_holiday_status(self):
+        """
+        Save the holiday and last-day-of-holiday status for the selected row as soon as the checkbox is toggled.
+        """
+        selected_item = self.tree.selection()
+        if not selected_item:
+            return
+
+        # Get the index of the selected row
+        row_index = self.tree.index(selected_item)
+
+        
+        # Save the current checkbox states as True or False in the dictionaries
+        self.holiday_eve_stat[row_index] = self.holiday_eve_var.get()
+        self.holiday_stat[row_index] = self.holiday_var.get()
+        self.last_day_holiday_stat[row_index] = self.last_day_holiday_var.get()
 
 
 
@@ -374,22 +404,25 @@ class SalaryGui:
         if not selected_item:
             return
 
-        values = self.tree.item(selected_item, 'values')  # Get the values from the selected row
-
-        # Ensure there are 8 values (in case Travel Charge or Pay columns are missing)
+        values = self.tree.item(selected_item, 'values')
         if len(values) < 8:
             values = list(values) + [''] * (8 - len(values))
 
         # Populate the fields with the respective values from the selected row
-        self.date_var.set(values[0])  # Date
-        self.date_of_week_var.set(values[1])  # Day of Week
-        self.role_var.set(values[2])  # Role
-        self.entry_time_var.set(values[3])  # Entry Time
-        self.exit_time_var.set(values[4])  # Exit Time
-
-        # Update the "In Control Room" checkbox based on the selected row's data
+        self.date_var.set(values[0])
+        self.date_of_week_var.set(values[1])
+        self.role_var.set(values[2])
+        self.entry_time_var.set(values[3])
+        self.exit_time_var.set(values[4])
         self.control_room_var.set(True if values[5] == "Yes" else False)
 
+        # Retrieve row index
+        row_index = self.tree.index(selected_item)
+
+        # Set checkbox values based on the saved status for this row, defaulting to False if not set
+        self.holiday_eve_var.set(self.holiday_eve_stat.get(row_index, False))
+        self.holiday_var.set(self.holiday_stat.get(row_index, False))
+        self.last_day_holiday_var.set(self.last_day_holiday_stat.get(row_index, False))
 
 
 
@@ -397,6 +430,9 @@ class SalaryGui:
 
 
     def update_row(self):
+        """
+        Update the selected row in the Treeview with the values from the entry fields and checkboxes.
+        """
         selected_item = self.tree.selection()
         if not selected_item:
             messagebox.showerror("No Selection", "Please select a row to update.")
@@ -407,11 +443,21 @@ class SalaryGui:
         role = self.role_var.get()
         entry_time = self.entry_time_var.get()
         exit_time = self.exit_time_var.get()
-        in_control_room = "Yes" if self.control_room_var.get() else "No"  # Get the correct value based on checkbox state
+        in_control_room = "Yes" if self.control_room_var.get() else "No" 
+        row_index = self.tree.index(selected_item)
+        self.holiday_stat[row_index] = self.holiday_var.get()
+        self.last_day_holiday_stat[row_index] = self.last_day_holiday_var.get()
+
+        row_index = self.tree.index(selected_item)
+        self.holiday_stat[row_index].set(self.holiday_var.get())
+        self.last_day_holiday_stat[row_index].set(self.last_day_holiday_var.get())
 
         # Update Treeview with new values
         day_of_week = self.get_day_of_week(date_str)  # Get the day of the week for the updated date
         self.tree.item(selected_item, values=(date_str, day_of_week, role, entry_time, exit_time, in_control_room,"0.00", "0.00"))
+
+
+
 
     # Helper function to get day of the week
     def get_day_of_week(self, date_str):
@@ -419,8 +465,6 @@ class SalaryGui:
             return datetime.strptime(date_str, "%Y-%m-%d").strftime('%A')
         except ValueError:
             return "Missing"
-
-
 
 
 
@@ -458,8 +502,10 @@ class SalaryGui:
                     # Determine if the workday is a Friday, Saturday, holiday, or last day of a holiday
                     is_friday = date.weekday() == 4  # 0 = Monday, 4 = Friday
                     is_saturday = date.weekday() == 5  # 5 = Saturday
-                    is_holiday = self.holiday_var.get()  # From checkbox
-                    is_last_day_of_holiday = self.last_day_holiday_var.get()  # From checkbox
+                    row_index = self.tree.index(item)
+                    is_holiday_eve = self.holiday_stat.get(row_index, False) # get it from checkbox
+                    is_holiday = self.holiday_stat.get(row_index, False)
+                    is_last_day_of_holiday = self.last_day_holiday_stat.get(row_index, False)
 
                     # Use a temporary instance of SalaryCalculator to avoid accumulating pay
                     temp_calculator = SalaryCalculator()
@@ -468,6 +514,7 @@ class SalaryGui:
                         start_time=start_time,
                         end_time=end_time,
                         in_control_room=in_control_room_flag,
+                        is_holiday_eve = is_holiday_eve,
                         is_friday=is_friday,
                         is_saturday=is_saturday,
                         is_holiday=is_holiday,
