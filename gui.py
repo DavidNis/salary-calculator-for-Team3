@@ -205,7 +205,7 @@ class SalaryGui:
         # Label to display total hours
         self.total_hours_var = tk.StringVar(value="Total Hours: 0.00")
         self.total_hours_label = ttk.Label(frame_inside_canvas, textvariable=self.total_hours_var, font=("Helvetica", 14), anchor="center")
-        self.total_hours_label.place(x=990, y=350)
+        self.total_hours_label.place(x=992, y=615)
 
     
     
@@ -240,7 +240,8 @@ class SalaryGui:
             values[4],  # Exit Time
             in_control_room,  # Updated Control Room value (Yes/No based on checkbox)
             values[6],  # Pay
-            values[7]   # Travel Charge
+            values[7],   # Travel Charge
+            values[8]   # Hours Worked
         )
 
         # Update the Treeview with the new values
@@ -281,8 +282,8 @@ class SalaryGui:
         for item in self.tree.get_children():
             values = self.tree.item(item, 'values')
 
-            if len(values) < 8:
-                values = list(values) + [''] * (8 - len(values))
+            if len(values) < 9:
+                values = list(values) + [''] * (9 - len(values))
 
             # update control room value to "Yes"
             updated_values = (
@@ -381,18 +382,20 @@ class SalaryGui:
         for item in self.tree.get_children():
             self.tree.delete(item)
 
-        total_hours = 0.0  # Initialize total hours counter
+        total_hours = 0.0 
 
         # Populate the Treeview
         for index, row in self.df.iterrows():
             if pd.isna(row['Role']) or row['Role'] == 'N/A':
                 continue
 
-            date_str = pd.to_datetime(row['Date'], format='%Y-%m-%d', errors='coerce')
-            if pd.notna(date_str):
-                date_str = date_str.strftime('%Y-%m-%d')
+            date_obj = pd.to_datetime(row['Date'], format='%Y-%m-%d', errors='coerce')
+            if pd.notna(date_obj):
+                date_str = date_obj.strftime('%Y-%m-%d')
+                day_of_week = date_obj.strftime('%A')
             else:
                 date_str = "Missing"
+                day_of_week = "Missing"
 
             role = row['Role']
 
@@ -412,7 +415,7 @@ class SalaryGui:
             total_hours += hours_worked
 
             # Insert the row into the Treeview, including the calculated hours worked
-            self.tree.insert("", "end", values=(date_str, row['Date'], role, entry_time, exit_time, "No", "", "", f"{hours_worked:.2f}"))
+            self.tree.insert("", "end", values=(date_str, day_of_week, role, entry_time, exit_time, "No", "", "", f"{hours_worked:.2f}"))
 
         self.total_hours_var.set(f"Total Hours: {total_hours:.2f}")
 
@@ -470,18 +473,15 @@ class SalaryGui:
         role = self.role_var.get()
         entry_time = self.entry_time_var.get()
         exit_time = self.exit_time_var.get()
-        in_control_room = "Yes" if self.control_room_var.get() else "No" 
-        row_index = self.tree.index(selected_item)
-        self.holiday_stat[row_index] = self.holiday_var.get()
-        self.last_day_holiday_stat[row_index] = self.last_day_holiday_var.get()
+        in_control_room = "Yes" if self.control_room_var.get() else "No"
+        
+        # Retrieve the existing "Hours Worked" value from the selected row
+        current_values = self.tree.item(selected_item, 'values')
+        hours_worked = current_values[8]  # Assuming "Hours Worked" is the 9th column (index 8)
 
-        row_index = self.tree.index(selected_item)
-        self.holiday_stat[row_index].set(self.holiday_var.get())
-        self.last_day_holiday_stat[row_index].set(self.last_day_holiday_var.get())
-
-        # Update Treeview with new values
+        # Update Treeview with new values while preserving "Hours Worked"
         day_of_week = self.get_day_of_week(date_str)  # Get the day of the week for the updated date
-        self.tree.item(selected_item, values=(date_str, day_of_week, role, entry_time, exit_time, in_control_room,"0.00", "0.00"))
+        self.tree.item(selected_item, values=(date_str, day_of_week, role, entry_time, exit_time, in_control_room, current_values[6], current_values[7], hours_worked))
 
 
 
