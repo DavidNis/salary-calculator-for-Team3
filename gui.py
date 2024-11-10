@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import tkinter.font as tkFont
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timedelta
 from ttkthemes import ThemedTk
 from salary_calc import SalaryCalculator
 import threading
@@ -97,7 +97,7 @@ class SalaryGui:
         tree_scroll.pack(side=tk.RIGHT, fill=tk.Y)
 
         # Treeview to display data
-        self.tree = ttk.Treeview(tree_frame, columns=("Date", "Day of Week", "Role", "Entry Time", "Exit Time", "Control Room", "Pay", "Travel Charge"),
+        self.tree = ttk.Treeview(tree_frame, columns=("Date", "Day of Week", "Role", "Entry Time", "Exit Time", "Control Room", "Pay", "Travel Charge", "Hours Worked"),
                                 show='headings', selectmode='browse', yscrollcommand=tree_scroll.set)
         self.tree.heading("Date", text="Date", anchor='center')
         self.tree.heading("Day of Week", text="Day of Week", anchor='center')
@@ -107,6 +107,7 @@ class SalaryGui:
         self.tree.heading("Control Room", text="Control Room", anchor='center')
         self.tree.heading("Pay", text="Pay", anchor='center')
         self.tree.heading("Travel Charge", text="Travel Charge", anchor='center')
+        self.tree.heading("Hours Worked", text="Hours Worked", anchor='center')
 
         self.tree.column("Date", anchor='center', width=100)
         self.tree.column("Day of Week", anchor='center', width=120)
@@ -116,6 +117,7 @@ class SalaryGui:
         self.tree.column("Control Room", anchor='center', width=100)
         self.tree.column("Pay", anchor='center', width=100)
         self.tree.column("Travel Charge", anchor='center', width=120)
+        self.tree.column("Hours Worked", anchor='center', width=100)
 
         self.tree.pack(fill='both', expand=True, padx=15)
         tree_scroll.config(command=self.tree.yview)
@@ -193,11 +195,17 @@ class SalaryGui:
         select_all_button = ttk.Button(edit_frame, text="Select All CR", command=self.select_all_in_control_room, style="Custom.TButton")
         select_all_button.grid(row=5, column=3, padx=10, pady=20, sticky="w")
 
+
         # Label to display the total pay
         ttk.Label(edit_frame, text="Total Pay:", style="Custom.TLabel").grid(row=5, column=3, padx=10, pady=20, sticky="e")
         self.total_pay_var = tk.StringVar(value="0.00")
         self.total_pay_label = ttk.Label(edit_frame, textvariable=self.total_pay_var, style="Custom.TLabel")
         self.total_pay_label.grid(row=5, column=4, padx=10, pady=20, sticky="w")
+
+        # Label to display total hours
+        self.total_hours_var = tk.StringVar(value="Total Hours: 0.00")
+        self.total_hours_label = ttk.Label(frame_inside_canvas, textvariable=self.total_hours_var, font=("Helvetica", 14), anchor="center")
+        self.total_hours_label.place(x=990, y=350)
 
     
     
@@ -285,7 +293,8 @@ class SalaryGui:
                 values[4],  # Exit Time
                 "Yes",      # Set 'In Control Room' to "Yes"
                 values[6],  # Pay
-                values[7]   # Travel Charge
+                values[7],   # Travel Charge
+                values[8]   # Hours Worked
             )
 
             self.tree.item(item, values=updated_values)
@@ -350,6 +359,16 @@ class SalaryGui:
 
 
 
+    def _format_time(self, time_value):
+        """
+        Format the time value to HH:MM if it's a valid time string, otherwise return "Missing".
+        """
+        try:
+            return datetime.strptime(str(time_value), "%H:%M:%S").strftime("%H:%M")
+        except (ValueError, TypeError):
+            return "Missing"
+
+
 
 
 
@@ -358,38 +377,46 @@ class SalaryGui:
         Update the Treeview with the data from the loaded Excel file.
         """
 
-        # clear any existing data in the Treeview
+        # Clear any existing data in the Treeview
         for item in self.tree.get_children():
             self.tree.delete(item)
+
+        total_hours = 0.0  # Initialize total hours counter
 
         # Populate the Treeview
         for index, row in self.df.iterrows():
             if pd.isna(row['Role']) or row['Role'] == 'N/A':
                 continue
 
-            # Format the date
-            date_str = pd.to_datetime(row['Date']).strftime('%Y-%m-%d') if pd.notna(row['Date']) else "Missing"
+            date_str = pd.to_datetime(row['Date'], format='%Y-%m-%d', errors='coerce')
+            if pd.notna(date_str):
+                date_str = date_str.strftime('%Y-%m-%d')
+            else:
+                date_str = "Missing"
+
             role = row['Role']
 
             # Format entry and exit times to HH:MM, handle potential parsing issues
-            try:
-                entry_time = datetime.strptime(str(row['Entry Time']), '%H:%M:%S').strftime('%H:%M') if pd.notna(row['Entry Time']) else "Missing"
-            except ValueError:
-                entry_time = "Missing"
+            entry_time = self._format_time(row['Entry Time'])
+            exit_time = self._format_time(row['Exit Time'])
 
-            try:
-                exit_time = datetime.strptime(str(row['Exit Time']), '%H:%M:%S').strftime('%H:%M') if pd.notna(row['Exit Time']) else "Missing"
-            except ValueError:
-                exit_time = "Missing"
+            if date_str == "Missing" or entry_time == "Missing" or exit_time == "Missing":
+                continue
 
-            # Calculate the day of the week from the date
-            if pd.notna(row['Date']):
-                day_of_week = pd.to_datetime(row['Date']).strftime('%A')  # Get full weekday name
-            else:
-                day_of_week = "Missing"
+            # Calculate hours worked if both entry and exit times are valid
+            entry_dt = datetime.strptime(entry_time, "%H:%M")
+            exit_dt = datetime.strptime(exit_time, "%H:%M")
+            if exit_dt <= entry_dt:
+                exit_dt += timedelta(days=1)  # Handle overnight shifts
+            hours_worked = (exit_dt - entry_dt).total_seconds() / 3600
+            total_hours += hours_worked
 
-            # Insert the row into the Treeview, including the day of the week
-            self.tree.insert("", "end", values=(date_str, day_of_week, role, entry_time, exit_time, "No", ""))
+            # Insert the row into the Treeview, including the calculated hours worked
+            self.tree.insert("", "end", values=(date_str, row['Date'], role, entry_time, exit_time, "No", "", "", f"{hours_worked:.2f}"))
+
+        self.total_hours_var.set(f"Total Hours: {total_hours:.2f}")
+
+
 
 
 
@@ -459,12 +486,30 @@ class SalaryGui:
 
 
 
-    # Helper function to get day of the week
     def get_day_of_week(self, date_str):
+        """
+        Get the day of the week from a given date string
+        """
         try:
             return datetime.strptime(date_str, "%Y-%m-%d").strftime('%A')
         except ValueError:
             return "Missing"
+
+
+
+
+    def calculate_total_hours(self):
+        """
+        Calculate the total hours worked for all days in the treeview.
+        """
+        total_hours = 0.0
+        for item in self.tree.get_children():
+            values = self.tree.item(item, 'values')
+            try:
+                total_hours += float(values[8])  # 'Hours Worked' column index
+            except (ValueError, IndexError):
+                continue
+        self.total_hours_var.set(f"{total_hours:.2f} hours")
 
 
 
@@ -482,12 +527,12 @@ class SalaryGui:
             for item in self.tree.get_children():
                 values = self.tree.item(item, 'values')
 
-                # Ensure the row has 8 values, fill with placeholder if needed
-                if len(values) < 8:
-                    values = list(values) + [''] * (8 - len(values))  # Add empty placeholders for missing columns
+                # Ensure the row has the correct number of values (9 including 'Hours Worked')
+                if len(values) < 9:
+                    values = list(values) + [''] * (9 - len(values))
 
-                # The values tuple now has 8 elements: Date, DayOfWeek, Role, Entry Time, Exit Time, Control Room, Pay, Travel Charge
-                date_str, day_of_week, role, entry_time_str, exit_time_str, in_control_room, _, _ = values
+                # Unpack the values
+                date_str, day_of_week, role, entry_time_str, exit_time_str, in_control_room, _, _, _ = values
 
                 if entry_time_str == "Missing" or exit_time_str == "Missing":
                     total_pay_day = 0.0
@@ -503,7 +548,7 @@ class SalaryGui:
                     is_friday = date.weekday() == 4  # 0 = Monday, 4 = Friday
                     is_saturday = date.weekday() == 5  # 5 = Saturday
                     row_index = self.tree.index(item)
-                    is_holiday_eve = self.holiday_stat.get(row_index, False) # get it from checkbox
+                    is_holiday_eve = self.holiday_stat.get(row_index, False)
                     is_holiday = self.holiday_stat.get(row_index, False)
                     is_last_day_of_holiday = self.last_day_holiday_stat.get(row_index, False)
 
@@ -514,7 +559,7 @@ class SalaryGui:
                         start_time=start_time,
                         end_time=end_time,
                         in_control_room=in_control_room_flag,
-                        is_holiday_eve = is_holiday_eve,
+                        is_holiday_eve=is_holiday_eve,
                         is_friday=is_friday,
                         is_saturday=is_saturday,
                         is_holiday=is_holiday,
@@ -522,11 +567,11 @@ class SalaryGui:
                     )
                     total_pay_day = temp_calculator.total_pay()
 
-                    # Calculate the travel charge using the same logic as in SalaryCalculator
+                    # Calculate the travel charge for the day
                     travel_charge_day = temp_calculator.calculate_travel_charge(date, start_time, end_time, is_friday, is_saturday)
 
                 # Update Treeview with the calculated pay and travel charge for that specific day
-                self.tree.item(item, values=(date_str, day_of_week, role, entry_time_str, exit_time_str, in_control_room, f"{total_pay_day:.2f}", f"{travel_charge_day:.2f}"))
+                self.tree.item(item, values=(date_str, day_of_week, role, entry_time_str, exit_time_str, in_control_room, f"{total_pay_day:.2f}", f"{travel_charge_day:.2f}", values[8]))
 
         except Exception as e:
             messagebox.showerror("Error", f"Error calculating pay: {e}")
