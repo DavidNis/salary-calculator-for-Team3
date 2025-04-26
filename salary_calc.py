@@ -9,7 +9,7 @@ class SalaryCalculator:
 
     def add_work_day(self, date, start_time, end_time, in_control_room, is_holiday_eve,
                      is_friday, is_saturday, is_holiday, is_last_day_of_holiday):
-        base_rate = 60 if in_control_room else 50
+        base_rate = 61.6 if in_control_room else 51.3
 
         # combine date and time
         start_datetime = datetime.combine(date, start_time)
