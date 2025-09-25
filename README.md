@@ -1,33 +1,108 @@
-היי team. 
-הוראות השימוש ב-GUI (במערכת):
+# Salary Calculator for Team3
 
-כדי להתחיל, יש צורך להוריד את הדו"ח מה-ShiftOrganizer ולמלא את השעות שעבדתם (במידה והשעות כבר קיימות, רק לעבור ולוודא שהכל תקין).
+## Overview
+The Salary Calculator for Team3 is a comprehensive salary calculation tool designed to handle complex payroll scenarios, including Excel integration, holiday pay calculations, and control room shift management.
 
-לאחר מכן, נכנסים למערכת ולוחצים על ה-load excel file (המערכת מקבלת רק קבצי אקסל אז שימו לב שלא מעלים קובץ אחר).
+This application was created because salary calculations were becoming too complicated to handle manually. It streamlines the process by importing shift data from **ShiftOrganizer Excel files** and automatically calculating pay based on work hours, holidays, and special conditions such as control room shifts. This eliminates the complexity and potential errors of manual calculations.
 
-אתם תראו שיש לכם את רשימת הימים והשעות שעבדתם בהם, ימים שלא עבדתם לא יהיו ברשימה.
+---
 
-לעובדי חדר הבקרה יש את האופציה לבחור אם עבדו בחדר בקרה או לא ,ביום כלשהו, על ידי checkbox ואם רוצים לסמן את הכל אז עושים זאת על ידי לחיצה על הכפתור select all CR.
+## Features
+- **Excel File Integration**: Import shift data directly from ShiftOrganizer Excel files  
+- **Control Room Support**: Special pay calculations for control room workers  
+- **Holiday Management**: Automatic handling of holiday eve, holiday, and last day of holiday pay rates  
+- **Date-Based Calculations**: Accurate pay calculations based on work dates and hours  
+- **Real-Time Updates**: Edit and update shift data with instant recalculation  
+- **Detailed Breakdown**: View pay calculations for individual days and total monthly pay  
 
+---
 
-בגלל שהמערכת לא יודעת מתי יש חג, על אחריותכם לסמן אם זה:
+## Quick Start
 
- ערב חג על ידי לחיצה על כפתור ה-Holiday eve
-  
- יום חג על ידי לחיצה על כפתור Holiday.
+### Download & Installation
+1. Click the green **Code** button on the GitHub page  
+2. Select **Download ZIP**  
+3. Extract the ZIP file  
+4. Run the `.exe` file from the extracted folder  
 
- היום האחרון של החג אז המערכת תתנהג כמו התשלום ביום שבת לכן יש לוודא שלוחצים על הכפתור last day of holiday.
+> Note: The application may take a few seconds to load. If Windows shows a security warning, click **Run anyway**.
 
+---
 
-כדי לראות את הסכום לתשלום שתקבלו בסוף החודש יש ללחוץ על Calculate Pay for each day ואז על Calculate Total Pay על מנת לוודא שבכל יום מקבלים את הסכום שאמור להיות (כך ניתן לדעת איפה יש טעות, אם יש).
+## How to Use
 
-במידה ויש טעות בשעות שעבדתם ביום מסוים או בתאריך, ניתן לעדכן וללחוץ על update selected row ואז שוב על ההוראות מהשורה הקודמת.
+1. Download your shift report from **ShiftOrganizer**  
+2. Fill in your work hours (or verify existing hours are correct)  
+3. Launch the Salary Calculator application  
+4. Click **Load Excel File** and select your Excel file  
+5. Review your work days and hours in the application  
 
-בהצלחה! 
+---
 
+## User Guide
 
-הוראות להורדה: 
-לוחצים על הכפתור code שבצבע ירוק, לאחר מכן download zip. מתוך הזיפ מחלצים את קובץ ה-exe. ייקח כמה שניות למערכת לעלות (במידה וקופצת התראה של ווינדוס, יש ללחוץ על run anyway).
+### Basic Operation
+- **Load Data**: Import your Excel file containing shift information  
+- **Review Schedule**: Check the list of work days and hours  
+- **Configure Settings**: Set up control room shifts and holidays as needed  
+- **Calculate Pay**: Generate your salary calculations  
+
+### Control Room Workers
+For employees working in the control room:
+- Use the checkbox next to each day to indicate control room shifts  
+- Click **Select All CR** to mark all days as control room shifts  
+- Control room shifts have different pay rates  
+
+### Holiday Configuration
+Since the system doesn’t automatically detect holidays, you need to configure them manually:
+- **Holiday Eve**: Click the **Holiday Eve** button for days before holidays  
+- **Holiday**: Click the **Holiday** button for actual holiday days  
+- **Last Day of Holiday**: Click the **Last Day of Holiday** button (calculated like Saturday pay)  
+
+### Calculating Your Pay
+- Click **Calculate Pay for each day** to see daily breakdowns  
+- Click **Calculate Total Pay** to see your monthly total  
+- Review individual day calculations to identify discrepancies  
+
+### Updating Information
+If you need to correct hours or dates:
+- Edit the information directly in the interface  
+- Click **Update Selected Row**  
+- Recalculate using the steps above  
+
+---
+
+## Technical Details
+- **Platform**: Windows Desktop Application  
+- **Input Format**: Excel files (`.xlsx`, `.xls`)  
+- **Language**: Hebrew interface  
+- **Integration**: Compatible with ShiftOrganizer system  
+
+---
+
+## Usage Tips
+- **File Format**: Only Excel files are supported — ensure you’re not uploading other file types  
+- **Accuracy Check**: Always verify your hours and dates before final calculations  
+- **Holiday Planning**: Mark holidays correctly as they significantly impact pay calculations  
+- **Data Backup**: Keep copies of your original Excel files  
+
+---
+
+## Troubleshooting
+
+### Application won’t start
+- Wait a few seconds for the application to load  
+- If Windows blocks the application, click **Run anyway**  
+
+### Excel file won’t load
+- Ensure the file is in Excel format (`.xlsx` or `.xls`)  
+- Check that the file isn’t corrupted or password-protected  
+- Verify the file structure matches the ShiftOrganizer format  
+
+### Incorrect calculations
+- Double-check holiday markings  
+- Verify work hours are entered correctly  
+- Ensure control room shifts are properly marked  
 
 
 
