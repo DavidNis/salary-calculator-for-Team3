@@ -17,18 +17,6 @@ This application was created because salary calculations were becoming too compl
 
 ---
 
-## Quick Start
-
-### Download & Installation
-1. Click the green **Code** button on the GitHub page  
-2. Select **Download ZIP**  
-3. Extract the ZIP file  
-4. Run the `.exe` file from the extracted folder  
-
-> Note: The application may take a few seconds to load. If Windows shows a security warning, click **Run anyway**.
-
----
-
 ## How to Use
 
 1. Download your shift report from **ShiftOrganizer**  
@@ -48,8 +36,7 @@ This application was created because salary calculations were becoming too compl
 - **Calculate Pay**: Generate your salary calculations  
 
 ### Control Room Workers
-For employees working in the control room:
-- Use the checkbox next to each day to indicate control room shifts  
+For employees working in the control room:  
 - Click **Select All CR** to mark all days as control room shifts  
 - Control room shifts have different pay rates  
 
